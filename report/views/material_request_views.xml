@@ -1,0 +1,200 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Material Request Form View -->
+    <record id="view_material_request_form" model="ir.ui.view">
+        <field name="name">test_app.material.request.form</field>
+        <field name="model">test_app.material.request</field>
+        <field name="arch" type="xml">
+            <form string="Material Request">
+                <header>
+                    <button name="action_submit" type="object" string="Submit" class="btn-primary"
+                            invisible="state != 'draft'"/>
+                    <button name="action_approve" type="object" string="Approve" class="btn-primary"
+                            invisible="state != 'submitted'"
+                            groups="test_app.group_material_request_manager"/>
+                    <button name="%(test_app.action_material_request_reject_wizard)d" type="action" string="Reject"
+                            invisible="state not in ('submitted', 'approved')"
+                            groups="test_app.group_material_request_manager"/>
+                    <button name="action_set_to_draft" type="object" string="Set to Draft"
+                            invisible="state != 'rejected'"
+                            groups="test_app.group_material_request_manager"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,submitted,approved,done"/>
+                    <field name="purchase_request_id" invisible="1"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_purchase_request" type="object" class="oe_stat_button" icon="fa-list"
+                                invisible="not purchase_request_id">
+                            <div class="o_field_widget o_stat_info">
+                                <span class="o_stat_text">Purchase</span>
+                                <span class="o_stat_text">Request</span>
+                            </div>
+                        </button>
+                    </div>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" readonly="1"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="employee_id" options="{'no_create': True}" readonly="state != 'draft'"/>
+                            <field name="department_id"/>
+                            <field name="date_requested" readonly="state != 'draft'"/>
+                            <field name="date_required" readonly="state != 'draft'"/>
+                        </group>
+                        <group>
+                            <field name="total_estimated_cost" widget="monetary"/>
+                            <field name="currency_id" invisible="1"/>
+                            <field name="company_id" groups="base.group_multi_company" readonly="state != 'draft'"/>
+                        </group>
+                    </group>
+                    <group string="Approval Information" invisible="state in ('draft', 'submitted')">
+                        <group invisible="state != 'approved'">
+                            <field name="approved_by"/>
+                            <field name="approved_date"/>
+                        </group>
+                        <group invisible="state != 'rejected'">
+                            <field name="rejected_by"/>
+                            <field name="rejected_date"/>
+                            <field name="rejected_reason"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Request Lines" name="lines">
+                            <field name="line_ids" readonly="state != 'draft'">
+                                <tree editable="bottom">
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="product_id" options="{'no_create': True}"/>
+                                    <field name="description"/>
+                                    <field name="quantity"/>
+                                    <field name="uom_id"/>
+                                    <field name="estimated_unit_cost" widget="monetary"/>
+                                    <field name="estimated_total_cost" widget="monetary" sum="Total"/>
+                                    <field name="currency_id" invisible="1"/>
+                                </tree>
+                            </field>
+                        </page>
+                        <page string="Other Information" name="other_info">
+                            <group>
+                                <field name="reason" placeholder="Enter the reason for this material request..." readonly="state != 'draft'"/>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids"/>
+                    <field name="activity_ids"/>
+                    <field name="message_ids"/>
+                </div>
+            </form>
+        </field>
+    </record>
+
+    <!-- Material Request Tree View -->
+    <record id="view_material_request_tree" model="ir.ui.view">
+        <field name="name">test_app.material.request.tree</field>
+        <field name="model">test_app.material.request</field>
+        <field name="arch" type="xml">
+            <tree string="Material Requests"
+                  decoration-warning="date_required &lt; current_date and state not in ('done', 'rejected')">
+                <field name="name"/>
+                <field name="employee_id"/>
+                <field name="department_id"/>
+                <field name="date_requested"/>
+                <field name="date_required"/>
+                <field name="total_estimated_cost" sum="Total" widget="monetary"/>
+                <field name="currency_id" invisible="1"/>
+                <field name="state" decoration-info="state == 'draft'"
+                       decoration-warning="state == 'submitted'"
+                       decoration-success="state == 'approved'"
+                       decoration-danger="state == 'rejected'"
+                       decoration-muted="state == 'done'"
+                       widget="badge"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Material Request Search View -->
+    <record id="view_material_request_search" model="ir.ui.view">
+        <field name="name">test_app.material.request.search</field>
+        <field name="model">test_app.material.request</field>
+        <field name="arch" type="xml">
+            <search string="Search Material Requests">
+                <field name="name" string="Request Number"/>
+                <field name="employee_id"/>
+                <field name="department_id"/>
+                <field name="line_ids" string="Product" filter_domain="[('line_ids.product_id', 'ilike', self)]"/>
+                <separator/>
+                <filter string="My Requests" name="my_requests"
+                        domain="[('employee_id.user_id', '=', uid)]"/>
+                <filter string="Draft" name="draft" domain="[('state', '=', 'draft')]"/>
+                <filter string="Submitted" name="submitted" domain="[('state', '=', 'submitted')]"/>
+                <filter string="Approved" name="approved" domain="[('state', '=', 'approved')]"/>
+                <filter string="Overdue" name="overdue"
+                        domain="[('date_required', '&lt;', context_today().strftime('%Y-%m-%d')), ('state', 'not in', ['done', 'rejected'])]"/>
+                <separator/>
+                <group expand="0" string="Group By">
+                    <filter string="State" name="group_state" context="{'group_by': 'state'}"/>
+                    <filter string="Department" name="group_department" context="{'group_by': 'department_id'}"/>
+                    <filter string="Employee" name="group_employee" context="{'group_by': 'employee_id'}"/>
+                    <filter string="Request Date" name="group_date_requested" context="{'group_by': 'date_requested'}"/>
+                    <filter string="Required Date" name="group_date_required" context="{'group_by': 'date_required'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Material Request Kanban View -->
+    <record id="view_material_request_kanban" model="ir.ui.view">
+        <field name="name">test_app.material.request.kanban</field>
+        <field name="model">test_app.material.request</field>
+        <field name="arch" type="xml">
+            <kanban default_group_by="state" class="o_kanban_small_column">
+                <field name="name"/>
+                <field name="employee_id"/>
+                <field name="department_id"/>
+                <field name="date_required"/>
+                <field name="total_estimated_cost"/>
+                <field name="currency_id"/>
+                <field name="state"/>
+                <templates>
+                    <t t-name="kanban-box">
+                        <div class="oe_kanban_global_click">
+                            <div class="o_kanban_record_top">
+                                <div class="o_kanban_record_headings">
+                                    <strong class="o_kanban_record_title">
+                                        <field name="name"/>
+                                    </strong>
+                                </div>
+                                <span class="badge badge-pill" t-att-class="{'badge-secondary': record.state.raw_value == 'draft',
+                                                                               'badge-warning': record.state.raw_value == 'submitted',
+                                                                               'badge-success': record.state.raw_value == 'approved',
+                                                                               'badge-danger': record.state.raw_value == 'rejected',
+                                                                               'badge-info': record.state.raw_value == 'done'}">
+                                    <field name="state"/>
+                                </span>
+                            </div>
+                            <div class="o_kanban_record_body">
+                                <field name="employee_id"/>
+                                <br/>
+                                <span t-if="record.department_id.value">
+                                    <i class="fa fa-sitemap"/> <field name="department_id"/>
+                                </span>
+                            </div>
+                            <div class="o_kanban_record_bottom">
+                                <div class="oe_kanban_bottom_left">
+                                    <i class="fa fa-calendar"/> <field name="date_required"/>
+                                </div>
+                                <div class="oe_kanban_bottom_right">
+                                    <field name="total_estimated_cost" widget="monetary"/>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+</odoo>

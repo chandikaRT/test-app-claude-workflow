@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <!-- Module Category -->
+        <record id="module_category_material_request" model="ir.module.category">
+            <field name="name">Material Request</field>
+            <field name="description">Manage access rights for material request management</field>
+            <field name="sequence">50</field>
+        </record>
+
+        <!-- User Group: Material Request User -->
+        <record id="group_material_request_user" model="res.groups">
+            <field name="name">User: Create and View Own Requests</field>
+            <field name="category_id" ref="module_category_material_request"/>
+            <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
+            <field name="comment">
+                Material Request User can:
+                - Create their own material requests
+                - View and edit their own draft material requests
+                - Submit material requests for approval
+                - View approved, rejected, and done material requests from all users
+            </field>
+        </record>
+
+        <!-- Manager Group: Material Request Manager -->
+        <record id="group_material_request_manager" model="res.groups">
+            <field name="name">Manager: Approve Requests</field>
+            <field name="category_id" ref="module_category_material_request"/>
+            <field name="implied_ids" eval="[(4, ref('group_material_request_user'))]"/>
+            <field name="comment">
+                Material Request Manager can:
+                - All User permissions
+                - View all material requests (including drafts from other users)
+                - Approve or reject material requests
+                - Reset material requests to draft
+                - Delete material requests
+            </field>
+        </record>
+
+        <!-- Procurement Officer Group -->
+        <record id="group_procurement_officer" model="res.groups">
+            <field name="name">Procurement Officer: Create Purchase Requests</field>
+            <field name="category_id" ref="module_category_material_request"/>
+            <field name="implied_ids" eval="[(4, ref('group_material_request_manager')), (4, ref('purchase.group_purchase_user'))]"/>
+            <field name="comment">
+                Procurement Officer can:
+                - All Manager permissions
+                - Create purchase requests from approved material requests
+                - View and edit purchase requests
+                - Convert purchase requests to purchase orders
+                - All standard purchase user permissions
+            </field>
+        </record>
+
+        <!-- Procurement Manager Group -->
+        <record id="group_procurement_manager" model="res.groups">
+            <field name="name">Procurement Manager: Full Access</field>
+            <field name="category_id" ref="module_category_material_request"/>
+            <field name="implied_ids" eval="[(4, ref('group_procurement_officer')), (4, ref('purchase.group_purchase_manager'))]"/>
+            <field name="comment">
+                Procurement Manager can:
+                - All Procurement Officer permissions
+                - Approve purchase requests
+                - Delete purchase requests
+                - Full administrative access to module
+                - All standard purchase manager permissions
+            </field>
+        </record>
+
+        <!-- Record Rules -->
+
+        <!-- Material Request: Multi-company Rule -->
+        <record id="material_request_rule_multi_company" model="ir.rule">
+            <field name="name">Material Request Multi-Company</field>
+            <field name="model_id" ref="model_test_app_material_request"/>
+            <field name="global" eval="True"/>
+            <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        </record>
+
+        <!-- Material Request: User can see own requests + approved/rejected/done from all -->
+        <record id="material_request_rule_user" model="ir.rule">
+            <field name="name">Material Request: User sees own requests and approved/rejected/done from all</field>
+            <field name="model_id" ref="model_test_app_material_request"/>
+            <field name="domain_force">['|', ('employee_id.user_id', '=', user.id), ('state', 'in', ['approved', 'rejected', 'done'])]</field>
+            <field name="groups" eval="[(4, ref('group_material_request_user'))]"/>
+        </record>
+
+        <!-- Material Request: Manager can see all -->
+        <record id="material_request_rule_manager" model="ir.rule">
+            <field name="name">Material Request: Manager sees all requests</field>
+            <field name="model_id" ref="model_test_app_material_request"/>
+            <field name="domain_force">[(1, '=', 1)]</field>
+            <field name="groups" eval="[(4, ref('group_material_request_manager'))]"/>
+        </record>
+
+        <!-- Purchase Request: Multi-company Rule -->
+        <record id="purchase_request_rule_multi_company" model="ir.rule">
+            <field name="name">Purchase Request Multi-Company</field>
+            <field name="model_id" ref="model_test_app_purchase_request"/>
+            <field name="global" eval="True"/>
+            <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        </record>
+
+    </data>
+</odoo>

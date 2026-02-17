@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Material Request PDF Report Template -->
+    <template id="report_material_request_document">
+        <t t-call="web.external_layout">
+            <t t-foreach="docs" t-as="o">
+                <div class="page">
+                    <!-- Report Header -->
+                    <div class="row mb-4">
+                        <div class="col-8">
+                            <h2>
+                                <span>Material Request</span>
+                                <span t-field="o.name"/>
+                            </h2>
+                        </div>
+                        <div class="col-4 text-end">
+                            <span class="badge" t-att-class="{
+                                'badge-secondary': o.state == 'draft',
+                                'badge-warning': o.state == 'submitted',
+                                'badge-success': o.state == 'approved',
+                                'badge-danger': o.state == 'rejected',
+                                'badge-info': o.state == 'done'
+                            }">
+                                <t t-esc="dict(o._fields['state'].selection).get(o.state)"/>
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Request Information -->
+                    <div class="row mb-4">
+                        <div class="col-6">
+                            <strong>Employee:</strong>
+                            <span t-field="o.employee_id"/>
+                        </div>
+                        <div class="col-6">
+                            <strong>Request Date:</strong>
+                            <span t-field="o.date_requested"/>
+                        </div>
+                    </div>
+
+                    <div class="row mb-4">
+                        <div class="col-6">
+                            <strong>Department:</strong>
+                            <span t-field="o.department_id"/>
+                        </div>
+                        <div class="col-6">
+                            <strong>Required Date:</strong>
+                            <span t-field="o.date_required"/>
+                        </div>
+                    </div>
+
+                    <!-- Reason -->
+                    <div class="row mb-4" t-if="o.reason">
+                        <div class="col-12">
+                            <strong>Reason for Request:</strong>
+                            <p t-field="o.reason"/>
+                        </div>
+                    </div>
+
+                    <!-- Request Lines Table -->
+                    <h4 class="mt-4 mb-3">Requested Items</h4>
+                    <table class="table table-sm o_main_table">
+                        <thead>
+                            <tr>
+                                <th class="text-start">#</th>
+                                <th class="text-start">Product</th>
+                                <th class="text-start">Description</th>
+                                <th class="text-end">Quantity</th>
+                                <th class="text-start">UoM</th>
+                                <th class="text-end">Est. Unit Cost</th>
+                                <th class="text-end">Est. Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr t-foreach="o.line_ids" t-as="line">
+                                <td class="text-start">
+                                    <span t-esc="line_index + 1"/>
+                                </td>
+                                <td class="text-start">
+                                    <span t-field="line.product_id"/>
+                                </td>
+                                <td class="text-start">
+                                    <span t-field="line.description"/>
+                                </td>
+                                <td class="text-end">
+                                    <span t-field="line.quantity"/>
+                                </td>
+                                <td class="text-start">
+                                    <span t-field="line.uom_id"/>
+                                </td>
+                                <td class="text-end">
+                                    <span t-field="line.estimated_unit_cost"
+                                          t-options='{"widget": "monetary", "display_currency": o.currency_id}'/>
+                                </td>
+                                <td class="text-end">
+                                    <span t-field="line.estimated_total_cost"
+                                          t-options='{"widget": "monetary", "display_currency": o.currency_id}'/>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <!-- Total -->
+                    <div class="row">
+                        <div class="col-8"/>
+                        <div class="col-4">
+                            <table class="table table-sm">
+                                <tr class="border-black">
+                                    <td><strong>Total Estimated Cost</strong></td>
+                                    <td class="text-end">
+                                        <span t-field="o.total_estimated_cost"
+                                              t-options='{"widget": "monetary", "display_currency": o.currency_id}'/>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Approval Information -->
+                    <div class="row mt-5" t-if="o.state == 'approved'">
+                        <div class="col-6">
+                            <strong>Approved By:</strong>
+                            <span t-field="o.approved_by"/>
+                        </div>
+                        <div class="col-6">
+                            <strong>Approval Date:</strong>
+                            <span t-field="o.approved_date"/>
+                        </div>
+                    </div>
+
+                    <!-- Rejection Information -->
+                    <div class="row mt-5" t-if="o.state == 'rejected'">
+                        <div class="col-12">
+                            <div class="alert alert-danger">
+                                <strong>Rejected By:</strong>
+                                <span t-field="o.rejected_by"/>
+                                <br/>
+                                <strong>Rejection Date:</strong>
+                                <span t-field="o.rejected_date"/>
+                                <br/>
+                                <strong>Reason:</strong>
+                                <span t-field="o.rejected_reason"/>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Signature Section (if approved) -->
+                    <div class="row mt-5" t-if="o.state == 'approved'">
+                        <div class="col-6">
+                            <div class="text-center">
+                                <div style="border-top: 1px solid black; padding-top: 10px; margin-top: 50px;">
+                                    Employee Signature
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="text-center">
+                                <div style="border-top: 1px solid black; padding-top: 10px; margin-top: 50px;">
+                                    Manager Signature
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </t>
+        </t>
+    </template>
+
+    <!-- Main Report Template -->
+    <template id="report_material_request">
+        <t t-call="web.html_container">
+            <t t-call="test_app.report_material_request_document"/>
+        </t>
+    </template>
+</odoo>
