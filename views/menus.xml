@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Material Request Action -->
+    <record id="action_material_request" model="ir.actions.act_window">
+        <field name="name">Material Requests</field>
+        <field name="res_model">test_app.material.request</field>
+        <field name="view_mode">tree,kanban,form</field>
+        <field name="search_view_id" ref="view_material_request_search"/>
+        <field name="context">{
+            'search_default_my_requests': 1,
+        }</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create your first Material Request
+            </p>
+            <p>
+                Request materials you need for your work. Your manager will review and approve your request.
+            </p>
+        </field>
+    </record>
+
+    <!-- Material Request Action - All Requests -->
+    <record id="action_material_request_all" model="ir.actions.act_window">
+        <field name="name">All Material Requests</field>
+        <field name="res_model">test_app.material.request</field>
+        <field name="view_mode">tree,kanban,form</field>
+        <field name="search_view_id" ref="view_material_request_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No material requests found
+            </p>
+        </field>
+    </record>
+
+    <!-- Purchase Request Action -->
+    <record id="action_purchase_request" model="ir.actions.act_window">
+        <field name="name">Purchase Requests</field>
+        <field name="res_model">test_app.purchase.request</field>
+        <field name="view_mode">tree,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create a Purchase Request
+            </p>
+            <p>
+                Consolidate approved material requests into purchase requests for vendors.
+            </p>
+        </field>
+    </record>
+
+    <!-- Purchase Request Action - To Approve -->
+    <record id="action_purchase_request_to_approve" model="ir.actions.act_window">
+        <field name="name">To Approve</field>
+        <field name="res_model">test_app.purchase.request</field>
+        <field name="view_mode">tree,form</field>
+        <field name="domain">[('state', '=', 'draft')]</field>
+        <field name="context">{'search_default_draft': 1}</field>
+    </record>
+
+    <!-- Root Menu -->
+    <menuitem id="menu_material_request_root"
+              name="Material Requests"
+              sequence="50"
+              web_icon="test_app,static/description/icon.png"
+              groups="test_app.group_material_request_user"/>
+
+    <!-- Material Requests Submenu -->
+    <menuitem id="menu_material_request"
+              name="Material Requests"
+              parent="menu_material_request_root"
+              sequence="10"/>
+
+    <menuitem id="menu_material_request_my"
+              name="My Requests"
+              parent="menu_material_request"
+              action="action_material_request"
+              sequence="10"/>
+
+    <menuitem id="menu_material_request_all"
+              name="All Requests"
+              parent="menu_material_request"
+              action="action_material_request_all"
+              sequence="20"
+              groups="test_app.group_material_request_manager"/>
+
+    <!-- Purchase Requests Submenu -->
+    <menuitem id="menu_purchase_request"
+              name="Purchase Requests"
+              parent="menu_material_request_root"
+              sequence="20"
+              groups="test_app.group_procurement_officer"/>
+
+    <menuitem id="menu_purchase_request_all"
+              name="All Purchase Requests"
+              parent="menu_purchase_request"
+              action="action_purchase_request"
+              sequence="10"/>
+
+    <menuitem id="menu_purchase_request_to_approve"
+              name="To Approve"
+              parent="menu_purchase_request"
+              action="action_purchase_request_to_approve"
+              sequence="20"
+              groups="test_app.group_procurement_manager"/>
+
+</odoo>

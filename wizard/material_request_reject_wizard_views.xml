@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Material Request Reject Wizard Form -->
+    <record id="view_material_request_reject_wizard_form" model="ir.ui.view">
+        <field name="name">test_app.material.request.reject.wizard.form</field>
+        <field name="model">test_app.material.request.reject.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Reject Material Request">
+                <group>
+                    <field name="material_request_id" invisible="1"/>
+                    <field name="rejected_reason" placeholder="Please explain why this material request is being rejected..." nolabel="1"/>
+                </group>
+                <footer>
+                    <button string="Confirm Rejection" name="action_reject" type="object" class="btn-primary"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <!-- Wizard Action -->
+    <record id="action_material_request_reject_wizard" model="ir.actions.act_window">
+        <field name="name">Reject Material Request</field>
+        <field name="res_model">test_app.material.request.reject.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+        <field name="binding_model_id" ref="model_test_app_material_request"/>
+        <field name="context">{'default_material_request_id': active_id}</field>
+    </record>
+
+</odoo>
